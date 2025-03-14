@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор складу палива</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            background: white;
+            padding: 20px;
+            margin: auto;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #333;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin: 5px 0;
+            text-align: left;
+        }
+        input {
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #218838;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background: #dff0d8;
+            border-radius: 5px;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Калькулятор складу сухої та горючої маси палива</h2>
+        <form id="fuelForm">
+            <label>H<sup>P</sup> (%): <input type="number" step="0.01" id="hp" required></label>
+            <label>C<sup>P</sup> (%): <input type="number" step="0.01" id="cp" required></label>
+            <label>S<sup>P</sup> (%): <input type="number" step="0.01" id="sp" required></label>
+            <label>N<sup>P</sup> (%): <input type="number" step="0.01" id="np" required></label>
+            <label>O<sup>P</sup> (%): <input type="number" step="0.01" id="op" required></label>
+            <label>W<sup>P</sup> (%): <input type="number" step="0.01" id="wp" required></label>
+            <label>A<sup>P</sup> (%): <input type="number" step="0.01" id="ap" required></label>
+            <button type="button" onclick="calculate()">Розрахувати</button>
+        </form>
+        
+        <div id="result" class="result" style="display:none;">
+            <h3>Результати розрахунку:</h3>
+            <p><strong>Коефіцієнт переходу від робочої до сухої маси:</strong> <span id="k_ps"></span></p>
+            <p><strong>Коефіцієнт переходу від робочої до горючої маси:</strong> <span id="k_pg"></span></p>
+            <h4>Склад сухої маси:</h4>
+            <p>H<sup>C</sup>: <span id="hs"></span>% | C<sup>C</sup>: <span id="cs"></span>% | S<sup>C</sup>: <span id="ss"></span>%</p>
+            <p>N<sup>C</sup>: <span id="ns"></span>% | O<sup>C</sup>: <span id="os"></span>% | A<sup>C</sup>: <span id="as"></span>%</p>
+            <h4>Склад горючої маси:</h4>
+            <p>H<sup>Г</sup>: <span id="hg"></span>% | C<sup>Г</sup>: <span id="cg"></span>% | S<sup>Г</sup>: <span id="sg"></span>%</p>
+            <p>N<sup>Г</sup>: <span id="ng"></span>% | O<sup>Г</sup>: <span id="og"></span>%</p>
+            <h4>Нижча теплота згоряння:</h4>
+            <p>1.5. Нижча теплота згоряння для робочої маси: <span id="q_r"></span> МДж/кг</p>
+            <p>1.6. Нижча теплота згоряння для сухої маси: <span id="q_s"></span> МДж/кг</p>
+            <p>1.7. Нижча теплота згоряння для горючої маси: <span id="q_g"></span> МДж/кг</p>
+        </div>
+        <p id="error" class="error" style="display:none;"></p>
+    </div>
+
+    <script>
+        function calculate() {
+            var hp = parseFloat(document.getElementById('hp').value);
+            var cp = parseFloat(document.getElementById('cp').value);
+            var sp = parseFloat(document.getElementById('sp').value);
+            var np = parseFloat(document.getElementById('np').value);
+            var op = parseFloat(document.getElementById('op').value);
+            var wp = parseFloat(document.getElementById('wp').value);
+            var ap = parseFloat(document.getElementById('ap').value);
+            
+            if (wp + ap >= 100) {
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').textContent = 'Помилка у введених даних!';
+                document.getElementById('result').style.display = 'none';
+                return;
+            }
+
+            var k_ps = (100 / (100 - wp)).toFixed(2);
+            var k_pg = (100 / (100 - wp - ap)).toFixed(2);
+
+            var hs = (hp * k_ps).toFixed(2);
+            var cs = (cp * k_ps).toFixed(2);
+            var ss = (sp * k_ps).toFixed(2);
+            var ns = (np * k_ps).toFixed(2);
+            var os = (op * k_ps).toFixed(2);
+            var as_ = (ap * k_ps).toFixed(2);
+
+            var hg = (hp * k_pg).toFixed(2);
+            var cg = (cp * k_pg).toFixed(2);
+            var sg = (sp * k_pg).toFixed(2);
+            var ng = (np * k_pg).toFixed(2);
+            var og = (op * k_pg).toFixed(2);
+
+            var q_r = (339 * cp + 1030 * hp - 108.8 * (op - sp) - 25 * wp).toFixed(3) / 1000;
+            var q_s = ((q_r + 0.025 * wp) * (100 / (100 - wp))).toFixed(2);
+            var q_g = ((q_r + 0.025 * wp) * (100 / (100 - wp - ap))).toFixed(2);
+
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('result').style.display = 'block';
+
+            document.getElementById('k_ps').textContent = k_ps;
+            document.getElementById('k_pg').textContent = k_pg;
+            document.getElementById('hs').textContent = hs;
+            document.getElementById('cs').textContent = cs;
+            document.getElementById('ss').textContent = ss;
+            document.getElementById('ns').textContent = ns;
+            document.getElementById('os').textContent = os;
+            document.getElementById('as').textContent = as_;
+            document.getElementById('hg').textContent = hg;-
+            document.getElementById('cg').textContent = cg;
+            document.getElementById('sg').textContent = sg;
+            document.getElementById('ng').textContent = ng;
+            document.getElementById('og').textContent = og;
+            document.getElementById('q_r').textContent = q_r;
+            document.getElementById('q_s').textContent = q_s;
+            document.getElementById('q_g').textContent = q_g;
+        }
+    </script>
+</body>
+</html>
