@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор викидів</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            background: white;
+            padding: 20px;
+            margin: auto;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #333;
+        }
+        form {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 10px;
+            align-items: center;
+        }
+        label {
+            text-align: left;
+        }
+        input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            grid-column: span 2;
+        }
+        button:hover {
+            background: #218838;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background: #dff0d8;
+            border-radius: 5px;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Калькулятор викидів</h2>
+        <form id="emissionForm">
+            <label for="bi_coal">Вугілля (бі):</label>
+            <input type="number" step="0.01" id="bi_coal" required>
+            
+            <label for="bi_oil">Мазут (бі):</label>
+            <input type="number" step="0.01" id="bi_oil" required>
+            
+            <label for="bi_gas">Природний газ (бі):</label>
+            <input type="number" step="0.01" id="bi_gas" required>
+            
+            <button type="button" onclick="calculateEmission()">Розрахувати</button>
+        </form>
+        
+        <div id="result" class="result" style="display:none;">
+            <h3>Результати розрахунку:</h3>
+            <p><strong>Показник емісії при спалюванні вугілля:</strong> <span id="coal_k_tv"></span> г/ГДж</p>
+            <p><strong>Валовий викид при спалюванні вугілля:</strong> <span id="coal_emission"></span> т</p>
+            <p><strong>Показник емісії при спалюванні мазуту:</strong> <span id="oil_k_tv"></span> г/ГДж</p>
+            <p><strong>Валовий викид при спалюванні мазуту:</strong> <span id="oil_emission"></span> т</p>
+            <p><strong>Показник емісії при спалюванні природного газу:</strong> <span id="gas_k_tv"></span> г/ГДж</p>
+            <p><strong>Валовий викид при спалюванні природного газу:</strong> <span id="gas_emission"></span> т</p>
+        </div>
+        <p id="error" class="error" style="display:none;"></p>
+    </div>
+
+    <script>
+        function calculateEmission() {
+    let biCoal = parseFloat(document.getElementById("bi_coal").value) || 0;
+    let biOil = parseFloat(document.getElementById("bi_oil").value) || 0;
+    let biGas = parseFloat(document.getElementById("bi_gas").value) || 0;
+    
+    // Коефіцієнти емісії (г/ГДж)
+    const kTvCoal = 150; // для кам'яного вугілля
+    const kTvOil = 0.57;  // для мазуту
+    const kTvGas = 0;  // природний газ не утворює твердих частинок
+    
+    // Енергетична цінність (ГДж/т)
+    const energyCoal = 20.47;
+    const energyOil = 40.40;
+    const energyGas = 0;
+    
+    // Розрахунок валових викидів (тонн CO2)
+    let coalEmission = (kTvCoal * biCoal * energyCoal) / 1e6;
+    let oilEmission = (kTvOil * biOil * energyOil) / 1e6;
+    let gasEmission = 0; // Газ не утворює твердих частинок
+    
+    if (biCoal === 0 && biOil === 0 && biGas === 0) {
+        document.getElementById("error").innerText = "Будь ласка, введіть значення для розрахунку.";
+        document.getElementById("error").style.display = "block";
+        document.getElementById("result").style.display = "none";
+        return;
+    }
+    
+    document.getElementById("coal_k_tv").innerText = kTvCoal;
+    document.getElementById("coal_emission").innerText = coalEmission.toFixed(2);
+    document.getElementById("oil_k_tv").innerText = kTvOil;
+    document.getElementById("oil_emission").innerText = oilEmission.toFixed(2);
+    document.getElementById("gas_k_tv").innerText = kTvGas;
+    document.getElementById("gas_emission").innerText = gasEmission.toFixed(2);
+    
+    document.getElementById("error").style.display = "none";
+    document.getElementById("result").style.display = "block";
+}
+
+    </script>
+</body>
+</html>
