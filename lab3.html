@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор прибутку СЕС</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            background: white;
+            padding: 20px;
+            margin: auto;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #333;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin: 5px 0;
+            text-align: left;
+        }
+        input {
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #218838;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 10px;
+            background: #dff0d8;
+            border-radius: 5px;
+            display: none;
+        }
+        #error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Калькулятор прибутку сонячної електростанції</h2>
+        <form id="profitCalculator">
+            <label for="Pc">Середньодобова потужність (МВт):</label>
+            <input type="number" id="Pc" step="0.01" value="5" required>
+
+            <label for="sigma1">Похибка прогнозу (до вдосконалення), σ1 (МВт):</label>
+            <input type="number" id="sigma1" step="0.01" value="1" required>
+
+            <label for="sigma2">Похибка прогнозу (після вдосконалення), σ2 (МВт):</label>
+            <input type="number" id="sigma2" step="0.01" value="0.25" required>
+
+            <label for="V">Вартість електроенергії (грн/кВт·год):</label>
+            <input type="number" id="V" step="0.01" value="7" required>
+
+            <button type="button" onclick="calculateProfit()">Розрахувати</button>
+        </form>
+
+        <div id="results">
+            <h3>Результати розрахунку:</h3>
+            <p><strong>Прибуток до вдосконалення:</strong> <span id="profitBefore"></span> тис. грн</p>
+            <p><strong>Штраф до вдосконалення:</strong> <span id="fineBefore"></span> тис. грн</p>
+            <p><strong>Прибуток після вдосконалення:</strong> <span id="profitAfter"></span> тис. грн</p>
+            <p><strong>Штраф після вдосконалення:</strong> <span id="fineAfter"></span> тис. грн</p>
+            <p><strong>Загальний прибуток:</strong> <span id="totalProfit"></span> тис. грн</p>
+        </div>
+
+        <p id="error" class="error" style="display:none;"></p>
+    </div>
+
+    <script>
+        function calculateProfit() {
+            let Pc = parseFloat(document.getElementById("Pc").value); 
+            let sigma1 = parseFloat(document.getElementById("sigma1").value); 
+            let sigma2 = parseFloat(document.getElementById("sigma2").value); 
+            let V = parseFloat(document.getElementById("V").value); 
+
+            if (isNaN(Pc) || isNaN(sigma1) || isNaN(sigma2) || isNaN(V)) {
+                alert("Будь ласка, введіть коректні числові значення.");
+                return;
+            }
+
+            let delta1 = normalCDF(5.25, 5, sigma1) - normalCDF(4.75, 5, sigma1); 
+            let delta2 = normalCDF(5.25, 5, sigma2) - normalCDF(4.75, 5, sigma2); 
+
+            let W1 = Pc * 24 * delta1; 
+            let W2 = Pc * 24 * (1 - delta1); 
+            let W3 = Pc * 24 * delta2; 
+            let W4 = Pc * 24 * (1 - delta2); 
+            
+            let P1 = W1 * V * 1000; 
+            let P2 = W3 * V * 1000; 
+            let fine1 = W2 * V * 1000; 
+            let fine2 = W4 * V * 1000; 
+            let profit = P2 - fine2; 
+
+            document.getElementById("profitBefore").innerText = P1.toFixed(2);
+            document.getElementById("fineBefore").innerText = fine1.toFixed(2);
+            document.getElementById("profitAfter").innerText = P2.toFixed(2);
+            document.getElementById("fineAfter").innerText = fine2.toFixed(2);
+            document.getElementById("totalProfit").innerText = profit.toFixed(2);
+
+            document.getElementById("results").style.display = 'block';
+        }
+
+        function normalCDF(x, mean, std) {
+            return (1 + erf((x - mean) / (Math.sqrt(2) * std))) / 2;
+        }
+
+        function erf(x) {
+            let sign = (x < 0) ? -1 : 1;
+            x = Math.abs(x);
+            let t = 1 / (1 + 0.3275911 * x);
+            let y = 1 - ((((1.061405429 * t + -1.453152027) * t + 1.421413741) * t + -0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
+            return sign * y;
+        }
+    </script>
+</body>
+</html>
