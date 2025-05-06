@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор Надійності та Збитків</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            background: white;
+            padding: 20px;
+            margin: auto;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        h4 {
+            color: #444;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .form-control {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .row {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .col {
+            flex: 1;
+            padding: 0 5px;
+        }
+        .btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .btn:hover {
+            background: #218838;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #dff0d8;
+            border-radius: 5px;
+            text-align: left;
+            display: none;
+        }
+        .list-group {
+            list-style-type: none;
+            padding: 0;
+        }
+        .list-group-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .list-group-item:last-child {
+            border-bottom: none;
+        }
+        .shadow-sm {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Калькулятор Надійності та Збитків</h1>
+        
+        <div class="card shadow-sm">
+            <form id="reliabilityForm">
+                <h4>Частоти відмов ωᵢ та часи відновлення tᵥᵢ</h4>
+                
+                <div id="omegaTviContainer">
+                    <div class="row">
+                        <div class="col">
+                            <input type="number" step="0.0001" class="form-control omega" value="0.01" required>
+                        </div>
+                        <div class="col">
+                            <input type="number" step="0.01" class="form-control tvi" value="30" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col">
+                            <input type="number" step="0.0001" class="form-control omega" value="0.07" required>
+                        </div>
+                        <div class="col">
+                            <input type="number" step="0.01" class="form-control tvi" value="0.07" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col">
+                            <input type="number" step="0.0001" class="form-control omega" value="0.015" required>
+                        </div>
+                        <div class="col">
+                            <input type="number" step="0.01" class="form-control tvi" value="0.015" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col">
+                            <input type="number" step="0.0001" class="form-control omega" value="0.02" required>
+                        </div>
+                        <div class="col">
+                            <input type="number" step="0.01" class="form-control tvi" value="0.02" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col">
+                            <input type="number" step="0.0001" class="form-control omega" value="0.03" required>
+                        </div>
+                        <div class="col">
+                            <input type="number" step="0.01" class="form-control tvi" value="0.03" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col">
+                            <input type="number" step="0.0001" class="form-control omega" value="0.06" required>
+                        </div>
+                        <div class="col">
+                            <input type="number" step="0.01" class="form-control tvi" value="0.06" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="button" id="addRowBtn" class="btn btn-secondary">Додати рядок</button>
+                
+                <h4>Дані для збитків</h4>
+                
+                <div class="form-group">
+                    <label>Середня вартість втрат електроенергії (Z_av):</label>
+                    <input type="number" step="0.01" class="form-control" id="Z_av" value="23.6" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Вартість планових втрат (Z_pl):</label>
+                    <input type="number" step="0.01" class="form-control" id="Z_pl" value="17.6" required>
+                </div>
+                
+                <button type="button" id="calculateBtn" class="btn btn-primary">Розрахувати</button>
+            </form>
+        </div>
+        
+        <div id="results" class="results card shadow-sm">
+            <h4>Результати розрахунків:</h4>
+            <ul class="list-group" id="resultsList">
+                <!-- Results will be inserted here by JavaScript -->
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Додаємо обробник подій для кнопки додавання рядка
+            document.getElementById('addRowBtn').addEventListener('click', addRow);
+            
+            // Додаємо обробник подій для кнопки розрахунку
+            document.getElementById('calculateBtn').addEventListener('click', calculate);
+        });
+        
+        function addRow() {
+            const container = document.getElementById('omegaTviContainer');
+            const newRow = document.createElement('div');
+            newRow.className = 'row';
+            newRow.innerHTML = `
+                <div class="col">
+                    <input type="number" step="0.0001" class="form-control omega" value="0.00" required>
+                </div>
+                <div class="col">
+                    <input type="number" step="0.01" class="form-control tvi" value="0.00" required>
+                </div>
+            `;
+            container.appendChild(newRow);
+        }
+        
+        function calculate() {
+            // Get omega and tvi values
+            const omegaInputs = document.querySelectorAll('.omega');
+            const tviInputs = document.querySelectorAll('.tvi');
+            
+            const omegaList = Array.from(omegaInputs).map(input => parseFloat(input.value));
+            const tviList = Array.from(tviInputs).map(input => parseFloat(input.value));
+            
+            // Get Z values
+            const Z_av = parseFloat(document.getElementById('Z_av').value);
+            const Z_pl = parseFloat(document.getElementById('Z_pl').value);
+            
+            // Perform calculations
+            const omega_oc = omegaList.reduce((sum, current) => sum + current, 0);
+            const t_v_oc = omegaList.reduce((sum, omega, index) => sum + omega * tviList[index], 0) / omega_oc;
+            
+            const k_a_oc = (omega_oc * t_v_oc) / 8760;
+            const k_n_oc = (1.2 * 1.43) / 8760;
+            
+            const omega_dc = omega_oc * (3.6e-4 + 58.9e-4);
+            const omega_dc_sek = 3.69e-4 + 0.00295;
+            
+            const M_W_nea = 0.01 * 0.4 * 45000 * 5.12e-5 * 6451;
+            const M_W_nep = 4e-3 * 5.12e-5 * 6451 * 8760;
+            
+            const M_Z = Z_av * M_W_nea + Z_pl * M_W_nep;
+            
+            // Format results
+            const results = {
+                "omega_oc": round(omega_oc, 4),
+                "t_v_oc": round(t_v_oc, 2),
+                "k_a_oc": round(k_a_oc, 6),
+                "k_n_oc": round(k_n_oc, 6),
+                "omega_dc": formatScientific(omega_dc, 4),
+                "omega_dc_sek": formatScientific(omega_dc_sek, 4),
+                "M_W_nea": round(M_W_nea, 2),
+                "M_W_nep": round(M_W_nep, 2),
+                "M_Z": round(M_Z, 2),
+            };
+            
+            // Display results
+            displayResults(results);
+        }
+        
+        function round(value, decimals) {
+            return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
+        }
+        
+        function formatScientific(value, decimals) {
+            return value.toExponential(decimals);
+        }
+        
+        function displayResults(results) {
+            const resultsList = document.getElementById('resultsList');
+            resultsList.innerHTML = '';
+            
+            const items = [
+                { label: "Частота відмов одноколової системи", value: results.omega_oc, unit: "рік⁻¹" },
+                { label: "Середня тривалість відновлення", value: results.t_v_oc, unit: "год" },
+                { label: "Коефіцієнт аварійного простою", value: results.k_a_oc, unit: "" },
+                { label: "Коефіцієнт планового простою", value: results.k_n_oc, unit: "" },
+                { label: "Частота відмов двоколової системи", value: results.omega_dc, unit: "" },
+                { label: "Частота відмов двоколової системи з секційником", value: results.omega_dc_sek, unit: "" },
+                { label: "Втрати енергії при аваріях", value: results.M_W_nea, unit: "кВт·год" },
+                { label: "Втрати енергії при планових роботах", value: results.M_W_nep, unit: "кВт·год" },
+                { label: "Загальні збитки", value: results.M_Z, unit: "грн" }
+            ];
+            
+            items.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
+                li.textContent = `${item.label}: ${item.value} ${item.unit}`;
+                resultsList.appendChild(li);
+            });
+            
+            document.getElementById('results').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

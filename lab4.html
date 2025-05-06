@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Електротехнічні розрахунки</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            background: white;
+            padding: 20px;
+            margin: auto;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #333;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin: 5px 0;
+            text-align: left;
+        }
+        input, select {
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #218838;
+        }
+        .calculation-section {
+            margin-top: 20px;
+            padding: 10px;
+            background: #dff0d8;
+            border-radius: 5px;
+            display: none;
+        }
+        .error-message {
+            color: red;
+            margin-top: 10px;
+        }
+        .hidden {
+            display: none;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        .nav-button {
+            padding: 10px 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .nav-button:hover {
+            background: #0056b3;
+        }
+        .emergency-params {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Електротехнічні розрахунки</h1>
+        
+        <div class="nav-buttons">
+            <button class="nav-button" onclick="displaySection('section1')">Розрахунок 1</button>
+            <button class="nav-button" onclick="displaySection('section2')">Розрахунок 2</button>
+            <button class="nav-button" onclick="displaySection('section3')">Розрахунок 3</button>
+        </div>
+        
+        <!-- Розрахунок 1 -->
+        <div id="section1" class="calculation-form">
+            <h2>Вибір перерізу кабелю</h2>
+            <form onsubmit="event.preventDefault(); computeCableSection();">
+                <label for="power">Розрахункове навантаження Sм (кВ·А): </label>
+                <input type="number" id="power" step="0.01" required>
+                
+                <label for="voltage1">Напруга U (кВ):</label>
+                <input type="number" id="voltage1" step="0.1" required>
+                
+                <label for="shortCircuitCurrent">Струм КЗ Ik (кА):</label>
+                <input type="number" id="shortCircuitCurrent" step="0.01" required>
+                
+                <label for="shortCircuitTime">Час вимкнення tφ (с):</label>
+                <input type="number" id="shortCircuitTime" step="0.01" required>
+                
+                <label for="cableHeatingTime">Час використання Tм (год):</label>
+                <input type="number" id="cableHeatingTime" step="0.1" required>
+                
+                <button type="submit">Розрахувати</button>
+            </form>
+            
+            <div id="output1" class="calculation-section"></div>
+        </div>
+        
+        <!-- Розрахунок 2 -->
+        <div id="section2" class="calculation-form hidden">
+            <h2>Розрахунок струмів короткого замикання</h2>
+            <form onsubmit="event.preventDefault(); computeShortCircuit();">
+                <label for="voltage2">Номінальна напруга Uc.н (кВ):</label>
+                <input type="number" id="voltage2" step="0.1" required>
+                
+                <label for="shortCircuitPower">Потужність короткого замикання Sk (МВ·А):</label>
+                <input type="number" id="shortCircuitPower" step="0.01" required>
+                
+                <label for="transformerVoltageDrop">Напруга короткого замикання трансформатора Uk%: </label>
+                <input type="number" id="transformerVoltageDrop" step="0.1" required>
+                
+                <label for="ratedPower">Номінальна потужність трансформатора Sном.т (МВ·А):</label>
+                <input type="number" id="ratedPower" step="0.01" required>
+                
+                <label for="calculationMethod">Метод розрахунку:</label>
+                <select id="calculationMethod" required>
+                    <option value="named">Іменований</option>
+                </select>
+                
+                <button type="submit">Розрахувати</button>
+            </form>
+            
+            <div id="output2" class="calculation-section"></div>
+        </div>
+        
+        <!-- Розрахунок 3 -->
+        <div id="section3" class="calculation-form hidden">
+            <h2>Розрахунок струмів КЗ в мережі</h2>
+            <form onsubmit="event.preventDefault(); computeNetworkShortCircuit();">
+                <label for="transformerVoltageDrop2">Напруга короткого замикання трансформатора Uk.max (%):</label>
+                <input type="number" id="transformerVoltageDrop2" step="0.1" required>
+                
+                <label for="highVoltage">Висока напруга трансформатора UВ.н (кВ): </label>
+                <input type="number" id="highVoltage" step="0.1" required>
+                
+                <label for="lowVoltage">Низька напруга трансформатора UН.н (кВ):</label>
+                <input type="number" id="lowVoltage" step="0.1" required>
+                
+                <label for="ratedPower2">Номінальна потужність трансформатора Sном.т (МВ·А): </label>
+                <input type="number" id="ratedPower2" step="0.01" required>
+                
+                <div>
+                    <label>Режим роботи:</label><br>
+                    <input type="radio" id="normalMode" name="operationMode" value="normal" checked>
+                    <label for="normalMode">Нормальний</label>
+                    
+                    <input type="radio" id="minimalMode" name="operationMode" value="minimal">
+                    <label for="minimalMode">Мінімальний</label>
+                    
+                    <input type="radio" id="emergencyMode" name="operationMode" value="emergency">
+                    <label for="emergencyMode">Аварійний</label>
+                </div>
+                
+                <div id="emergencyParams" class="emergency-params">
+                    <label for="emergencyR">Опір R (Ом):</label>
+                    <input type="number" id="emergencyR" step="0.01">
+                    
+                    <label for="emergencyX">Опір X (Ом):</label>
+                    <input type="number" id="emergencyX" step="0.01">
+                </div>
+                
+                <button type="submit">Розрахувати</button>
+            </form>
+            
+            <div id="output3" class="calculation-section"></div>
+        </div>
+    </div>
+
+    <script>
+        // Функція для відображення обраного розділу
+        function displaySection(sectionId) {
+            document.querySelectorAll('.calculation-form').forEach(section => {
+                section.classList.add('hidden');
+            });
+            document.getElementById(sectionId).classList.remove('hidden');
+            
+            // Очистити результати
+            document.querySelectorAll('.calculation-section').forEach(section => {
+                section.innerHTML = '';
+            });
+        }
+        
+        // Обробник подій для радіо-кнопок режиму роботи
+        document.querySelectorAll('input[name="operationMode"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const emergencyParams = document.getElementById('emergencyParams');
+                emergencyParams.style.display = this.value === 'emergency' ? 'block' : 'none';
+            });
+        });
+        
+        // Функція для розрахунку перерізу кабелю
+        function computeCableSection() {
+            const powerInput = parseFloat(document.getElementById('power').value);
+            const voltageInput = parseFloat(document.getElementById('voltage1').value);
+            const shortCircuitCurrentInput = parseFloat(document.getElementById('shortCircuitCurrent').value);
+            const shortCircuitTimeInput = parseFloat(document.getElementById('shortCircuitTime').value);
+            const cableHeatingTimeInput = parseFloat(document.getElementById('cableHeatingTime').value);
+            
+            // Розрахунок струму навантаження
+            const loadCurrent = (powerInput / 2) / (Math.sqrt(3) * voltageInput);
+            const postAccidentCurrent = 2 * loadCurrent;
+            
+            // Визначення економічної густини струму
+            let economicDensity;
+            if (cableHeatingTimeInput >= 4000) economicDensity = 1.4;
+            else if (cableHeatingTimeInput >= 3000) economicDensity = 1.6;
+            else economicDensity = 1.8;
+            
+            // Розрахунок економічного перерізу
+            const economicSection = loadCurrent / economicDensity;
+            
+            // Розрахунок мінімального перерізу за термічною стійкістю
+            const constant = 92;
+            const minimalSection = (shortCircuitCurrentInput * 1000 * Math.sqrt(shortCircuitTimeInput)) / constant;
+            
+            // Визначення рекомендованого перерізу
+            const recommendedSection = Math.max(Math.ceil(economicSection), Math.ceil(minimalSection));
+            
+            // Виведення результатів
+            const output = `
+                <h3>Результати розрахунків:</h3>
+                <p>Розрахунковий струм навантаження: <b>${loadCurrent.toFixed(2)}</b> А</p>
+                <p>Післяаварійний струм: <b>${postAccidentCurrent.toFixed(2)}</b> А</p>
+                <p>Економічна густина струму: <b>${economicDensity.toFixed(2)}</b> А/мм²</p>
+                <p>Економічний переріз кабелю: <b>${economicSection.toFixed(2)}</b> мм²</p>
+                <p>Мінімальний переріз за термічною стійкістю: <b>${minimalSection.toFixed(2)}</b> мм²</p>
+                <p><b>Рекомендований переріз кабелю: ${recommendedSection}</b> мм²</p>
+            `;
+            
+            document.getElementById('output1').innerHTML = output;
+            document.getElementById('output1').style.display = 'block';
+        }
+        
+        // Функція для розрахунку струмів короткого замикання
+        function computeShortCircuit() {
+            const voltageInput = parseFloat(document.getElementById('voltage2').value);
+            const shortCircuitPowerInput = parseFloat(document.getElementById('shortCircuitPower').value);
+            const transformerVoltageDropInput = parseFloat(document.getElementById('transformerVoltageDrop').value);
+            const ratedPowerInput = parseFloat(document.getElementById('ratedPower').value);
+            const calculationMethod = document.getElementById('calculationMethod').value;
+            
+            if (calculationMethod === 'named') {
+                // Розрахунок опорів
+                const systemResistance = Math.pow(voltageInput, 2) / shortCircuitPowerInput;
+                const transformerResistance = (transformerVoltageDropInput / 100) * (Math.pow(voltageInput, 2) / ratedPowerInput);
+                const totalResistance = systemResistance + transformerResistance;
+                
+                // Розрахунок струму короткого замикання
+                const shortCircuitCurrent = voltageInput / (Math.sqrt(3) * totalResistance);
+                
+                // Виведення результатів
+                const output = `
+                    <h3>Результати розрахунків:</h3>
+                    <p>Опір системи X<sub>c</sub>: <b>${systemResistance.toFixed(4)}</b> Ом</p>
+                    <p>Опір трансформатора X<sub>T</sub>: <b>${transformerResistance.toFixed(4)}</b> Ом</p>
+                    <p>Сумарний опір X<sub>Σ</sub>: <b>${totalResistance.toFixed(4)}</b> Ом</p>
+                    <p>Початкове діюче значення струму трифазного КЗ I<sub>П0</sub>: <b>${shortCircuitCurrent.toFixed(4)}</b> кА</p>
+                `;
+                
+                document.getElementById('output2').innerHTML = output;
+                document.getElementById('output2').style.display = 'block';
+            }
+        }
+        
+        // Функція для розрахунку струмів КЗ в мережі
+        function computeNetworkShortCircuit() {
+            const transformerVoltageDropInput = parseFloat(document.getElementById('transformerVoltageDrop2').value);
+            const highVoltageInput = parseFloat(document.getElementById('highVoltage').value);
+            const lowVoltageInput = parseFloat(document.getElementById('lowVoltage').value);
+            const ratedPowerInput = parseFloat(document.getElementById('ratedPower2').value);
+            const operationMode = document.querySelector('input[name="operationMode"]:checked').value;
+            
+            // Визначення параметрів залежно від режиму
+            let resistanceR, resistanceX;
+            switch(operationMode) {
+                case 'normal':
+                    resistanceR = 10.65;
+                    resistanceX = -24.02;
+                    break;
+                case 'minimal':
+                    resistanceR = 34.88;
+                    resistanceX = 65.68;
+                    break;
+                case 'emergency':
+                    resistanceR = parseFloat(document.getElementById('emergencyR').value);
+                    resistanceX = parseFloat(document.getElementById('emergencyX').value);
+                    break;
+            }
+            
+            // Розрахунок опору трансформатора
+            const transformerResistance = (transformerVoltageDropInput * Math.pow(highVoltageInput, 2)) / (100 * ratedPowerInput);
+            
+            // Розрахунок параметрів для високої напруги
+            const totalReactance = Math.abs(resistanceX) + transformerResistance;
+            const totalImpedance = Math.sqrt(Math.pow(resistanceR, 2) + Math.pow(totalReactance, 2));
+            
+            // Розрахунок струмів КЗ для високої напруги
+            const threePhaseCurrentHV = (highVoltageInput * 1000) / (Math.sqrt(3) * totalImpedance);
+            const twoPhaseCurrentHV = threePhaseCurrentHV * Math.sqrt(3) / 2;
+            
+            // Перерахунок параметрів для низької напруги
+            const conversionFactor = Math.pow(lowVoltageInput, 2) / Math.pow(highVoltageInput, 2);
+            const convertedResistanceR = resistanceR * conversionFactor;
+            const convertedResistanceX = totalReactance * conversionFactor;
+            const convertedImpedance = Math.sqrt(Math.pow(convertedResistanceR, 2) + Math.pow(convertedResistanceX, 2));
+            
+            // Розрахунок струмів КЗ для низької напруги
+            const threePhaseCurrentLV = (lowVoltageInput * 1000) / (Math.sqrt(3) * convertedImpedance);
+            const twoPhaseCurrentLV = threePhaseCurrentLV * Math.sqrt(3) / 2;
+            
+            // Визначення назви режиму
+            let modeName;
+            switch(operationMode) {
+                case 'normal': modeName = 'нормального'; break;
+                case 'minimal': modeName = 'мінімального'; break;
+                case 'emergency': modeName = 'аварійного'; break;
+            }
+            
+            // Виведення результатів
+            const output = `
+                <h3>Результати для ${modeName} режиму:</h3>
+                <p>Реактивний опір трансформатора X<sub>T</sub>: <b>${transformerResistance.toFixed(2)}</b> Ом</p>
+                <p>Повний опір Z<sub>III</sub>: <b>${totalImpedance.toFixed(2)}</b> Ом</p>
+                <p>Струм трифазного КЗ I<sub>III</sub><sup>(3)</sup>: <b>${threePhaseCurrentHV.toFixed(0)}</b> А</p>
+                <p>Струм двофазного КЗ I<sub>III</sub><sup>(2)</sup>: <b>${twoPhaseCurrentHV.toFixed(0)}</b> А</p>
+                <p>Приведений опір на шинах 10 кВ Z<sub>III.н</sub>: <b>${convertedImpedance.toFixed(2)}</b> Ом</p>
+                <p>Дійсний струм трифазного КЗ I<sub>III.н</sub><sup>(3)</sup>: <b>${threePhaseCurrentLV.toFixed(0)}</b> А</p>
+                <p>Дійсний струм двофазного КЗ I<sub>III.н</sub><sup>(2)</sup>: <b>${twoPhaseCurrentLV.toFixed(0)}</b> А</p>
+            `;
+            
+            document.getElementById('output3').innerHTML = output;
+            document.getElementById('output3').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Розрахунок електричних навантажень</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            background: white;
+            padding: 20px;
+            margin: auto;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h3 {
+            color: #444;
+            margin-top: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        th {
+            background-color: #343a40;
+            color: white;
+        }
+        .form-control {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 20px auto;
+            display: block;
+        }
+        .btn:hover {
+            background-color: #218838;
+        }
+        .list-group {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+        .list-group-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .list-group-item strong {
+            float: right;
+        }
+        .table-striped tbody tr:nth-child(odd) {
+            background-color: #f8f9fa;
+        }
+        .table-bordered {
+            border: 1px solid #dee2e6;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Розрахунок електричних навантажень</h1>
+        
+        <form id="calculationForm">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Найменування ЕП</th>
+                        <th>ηн</th>
+                        <th>cos φ</th>
+                        <th>Uн (кВ)</th>
+                        <th>n</th>
+                        <th>Pn (кВт)</th>
+                        <th>Kv</th>
+                        <th>tg φ</th>
+                    </tr>
+                </thead>
+                <tbody id="equipmentTable">
+                    <!-- Equipment rows will be added here by JavaScript -->
+                </tbody>
+            </table>
+            <button type="button" id="calculateBtn" class="btn">Розрахувати</button>
+        </form>
+        
+        <div id="resultsSection" class="hidden">
+            <h3>Результати розрахунку:</h3>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ЕП</th>
+                        <th>Ip (A)</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsTable">
+                    <!-- Results will be added here by JavaScript -->
+                </tbody>
+            </table>
+            <ul class="list-group" id="summaryResults">
+                <!-- Summary results will be added here by JavaScript -->
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Initial data from table 6.6
+        const initialData = [
+            {"name": "Шліфувальний верстат", "eta": 0.92, "cos_phi": 0.9, "U": 0.38, "n": 4, "Pn": 20, "Kv": 0.15, "tg_phi": 1.33},
+            {"name": "Свердлильний верстат", "eta": 0.92, "cos_phi": 0.9, "U": 0.38, "n": 2, "Pn": 14, "Kv": 0.12, "tg_phi": 1.0},
+            {"name": "Фугувальний верстат", "eta": 0.92, "cos_phi": 0.9, "U": 0.38, "n": 4, "Pn": 42, "Kv": 0.15, "tg_phi": 1.33},
+            {"name": "Циркулярна пила", "eta": 0.92, "cos_phi": 0.9, "U": 0.38, "n": 1, "Pn": 36, "Kv": 0.3, "tg_phi": 1.52},
+            {"name": "Прес", "eta": 0.92, "cos_phi": 0.9, "U": 0.38, "n": 1, "Pn": 20, "Kv": 0.5, "tg_phi": 0.75},
+            {"name": "Полірувальний верстат", "eta": 0.92, "cos_phi": 0.9, "U": 0.38, "n": 1, "Pn": 40, "Kv": 0.2, "tg_phi": 1.0},
+            {"name": "Фрезерний верстат", "eta": 0.92, "cos_phi": 0.9, "U": 0.38, "n": 2, "Pn": 32, "Kv": 0.2, "tg_phi": 1.0},
+            {"name": "Вентилятор", "eta": 0.92, "cos_phi": 0.9, "U": 0.38, "n": 1, "Pn": 20, "Kv": 0.65, "tg_phi": 0.75}
+        ];
+
+        // Initialize the table with initial data
+        document.addEventListener('DOMContentLoaded', function() {
+            renderEquipmentTable(initialData);
+            
+            // Add event listener to calculate button
+            document.getElementById('calculateBtn').addEventListener('click', calculate);
+        });
+
+        // Render equipment table
+        function renderEquipmentTable(data) {
+            const tableBody = document.getElementById('equipmentTable');
+            tableBody.innerHTML = '';
+            
+            data.forEach((ep, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><input type="text" class="form-control" name="name${index}" value="${ep.name}" required></td>
+                    <td><input type="number" step="0.01" class="form-control" name="eta${index}" value="${ep.eta}" required></td>
+                    <td><input type="number" step="0.01" class="form-control" name="cos_phi${index}" value="${ep.cos_phi}" required></td>
+                    <td><input type="number" step="0.01" class="form-control" name="U${index}" value="${ep.U}" required></td>
+                    <td><input type="number" class="form-control" name="n${index}" value="${ep.n}" required></td>
+                    <td><input type="number" class="form-control" name="Pn${index}" value="${ep.Pn}" required></td>
+                    <td><input type="number" step="0.01" class="form-control" name="Kv${index}" value="${ep.Kv}" required></td>
+                    <td><input type="number" step="0.01" class="form-control" name="tg_phi${index}" value="${ep.tg_phi}" required></td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Main calculation function
+        function calculate() {
+            const tableBody = document.getElementById('equipmentTable');
+            const rows = tableBody.querySelectorAll('tr');
+            const data = [];
+            
+            // Collect data from form
+            rows.forEach((row, index) => {
+                data.push({
+                    name: row.querySelector(`input[name="name${index}"]`).value,
+                    eta: parseFloat(row.querySelector(`input[name="eta${index}"]`).value),
+                    cos_phi: parseFloat(row.querySelector(`input[name="cos_phi${index}"]`).value),
+                    U: parseFloat(row.querySelector(`input[name="U${index}"]`).value),
+                    n: parseInt(row.querySelector(`input[name="n${index}"]`).value),
+                    Pn: parseFloat(row.querySelector(`input[name="Pn${index}"]`).value),
+                    Kv: parseFloat(row.querySelector(`input[name="Kv${index}"]`).value),
+                    tg_phi: parseFloat(row.querySelector(`input[name="tg_phi${index}"]`).value)
+                });
+            });
+            
+            // Perform calculations
+            const results = [];
+            let sum_Pn = 0;
+            let sum_KvPn = 0;
+            let sum_KvPn_tgphi = 0;
+            let sum_Pn2 = 0;
+            
+            data.forEach(ep => {
+                // Calculate Ip for each equipment
+                const Pn_total = ep.n * ep.Pn;
+                const Ip = round((Pn_total * 1000) / (ep.eta * ep.cos_phi * Math.sqrt(3) * ep.U), 1);
+                results.push({"name": ep.name, "Ip": Ip});
+                
+                // Sums for summary calculations
+                sum_Pn += Pn_total;
+                sum_KvPn += Pn_total * ep.Kv;
+                sum_KvPn_tgphi += Pn_total * ep.Kv * ep.tg_phi;
+                sum_Pn2 += Math.pow(Pn_total, 2);
+            });
+            
+            // Calculate summary values
+            const K_v = round(sum_KvPn / sum_Pn, 4);
+            const n_e = round(Math.pow(sum_Pn, 2) / sum_Pn2);
+            const K_p = 1.25;
+            const P_p = round(K_p * sum_KvPn, 2);
+            const Q_p = round(sum_KvPn_tgphi, 2);
+            const S_p = round(Math.sqrt(Math.pow(P_p, 2) + Math.pow(Q_p, 2)), 2);
+            const I_p = round((P_p * 1000) / (0.38 * Math.sqrt(3)), 2);
+            
+            // Display results
+            displayResults(results, K_v, n_e, K_p, P_p, Q_p, S_p, I_p);
+        }
+        
+        // Display results in tables
+        function displayResults(results, K_v, n_e, K_p, P_p, Q_p, S_p, I_p) {
+            // Display equipment results
+            const resultsTable = document.getElementById('resultsTable');
+            resultsTable.innerHTML = '';
+            
+            results.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.name}</td>
+                    <td>${item.Ip}</td>
+                `;
+                resultsTable.appendChild(row);
+            });
+            
+            // Display summary results
+            const summaryResults = document.getElementById('summaryResults');
+            summaryResults.innerHTML = `
+                <li class="list-group-item">Kв = <strong>${K_v}</strong></li>
+                <li class="list-group-item">nₑ = <strong>${n_e}</strong></li>
+                <li class="list-group-item">Kₚ = <strong>${K_p}</strong></li>
+                <li class="list-group-item">Pₚ = <strong>${P_p} кВт</strong></li>
+                <li class="list-group-item">Qₚ = <strong>${Q_p} квар</strong></li>
+                <li class="list-group-item">Sₚ = <strong>${S_p} кВА</strong></li>
+                <li class="list-group-item">Iₚ = <strong>${I_p} А</strong></li>
+            `;
+            
+            // Show results section
+            document.getElementById('resultsSection').classList.remove('hidden');
+        }
+        
+        // Helper function to round numbers
+        function round(value, decimals = 0) {
+            return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
+        }
+    </script>
+</body>
+</html>
